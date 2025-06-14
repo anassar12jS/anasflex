@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnasFlix - Search Results</title>
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        integrity="sha512-iBBXm8fW90+nuLcSKVB+f1XrP6U9e1C2e+0p5cF5eE6x0i6o1wqF6v6w7eXjYhZy+6Qp4eXq3jR2F3z7Q5vQ=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    />
+
+    <style>
+        /* General Body Styles (copied from index.html for consistency) */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #141414;
+            color: #fff;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+        a:focus {
+            outline: 2px solid #e50914;
+            outline-offset: 2px;
+        }
+        button {
+            font-family: inherit;
+        }
+
+        /* Scrollbar (copied from index.html) */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #141414; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(45deg, #ff0000, #b30000); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(45deg, #ff4d4d, #ff0000); }
+        body, html { scrollbar-width: thin; scrollbar-color: #b30000 #141414; }
+
+        /* Navbar for search.html (simplified from index.html) */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            background-color: #141414; /* Always dark on this page */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+        .brand {
+            font-size: 28px;
+            font-weight: 900;
+            color: #e50914;
+            user-select: none;
+        }
+        .free {
+            color: #fff;
+        }
+        .back-to-home-btn {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .back-to-home-btn:hover {
+            background-color: #b0060f;
+            box-shadow: 0 4px 10px rgba(229, 9, 20, 0.7);
+        }
+
+        h1 {
+            color: #e50914;
+            margin-bottom: 20px;
+            padding-top: 80px; /* Space for fixed navbar */
+            text-align: center;
+        }
+
+        /* Search Bar specific styles for search.html */
+        .search-page-container {
+            max-width: 1200px; /* Match your content container width */
+            margin: 0 auto; /* Center the content */
+            padding: 20px;
+        }
+
+        .search-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            max-width: 600px; /* Adjust max-width for the search input */
+            width: 100%;
+            margin: 20px auto; /* Center the search bar */
+        }
+        .search-input-wrapper:hover,
+        .search-input-wrapper.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .search-input-wrapper .fas.fa-search { /* More specific selector for icon */
+            color: #fff;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        .search-input-wrapper input {
+            flex-grow: 1;
+            font-size: 16px;
+            border: none;
+            background: transparent;
+            outline: none;
+            color: white;
+        }
+        .search-input-wrapper input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Loader */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #e50914;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Movie Grid */
+        #searchResultsContent {
+            margin-top: 20px;
+            min-height: 200px; /* Give some space for results or message */
+        }
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 20px 0; /* Adjusted padding */
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .movie-card {
+            background-color: #1c1c1c;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(229, 9, 20, 0.6);
+        }
+        .movie-poster {
+            width: 100%;
+            height: 270px;
+            background-size: cover;
+            background-position: center;
+        }
+        .movie-info {
+            padding: 15px;
+            text-align: left;
+        }
+        .movie-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 5px;
+        }
+        .movie-rating {
+            font-size: 0.9em;
+            color: #46d369; /* Green color for rating */
+        }
+        .no-results-message {
+            text-align: center;
+            font-size: 1.2em;
+            color: #bbb;
+            margin-top: 50px;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 40px 0;
+        }
+        .pagination button {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .pagination button:hover:not(:disabled) {
+            background-color: #b0060f;
+            transform: translateY(-2px);
+        }
+        .pagination button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .pagination span {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        /* Responsive adjustments for search.html */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+            .navbar .back-to-home-btn {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+            h1 {
+                padding-top: 20px;
+                font-size: 2em;
+            }
+            .search-input-wrapper {
+                max-width: 90%;
+                padding: 6px 15px;
+            }
+            .search-input-wrapper input {
+                font-size: 14px;
+            }
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 15px;
+            }
+            .movie-poster {
+                height: 210px;
+            }
+            .pagination {
+                gap: 10px;
+                margin: 20px 0;
+            }
+            .pagination button {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="brand"><a href="index.html">Anas<span class="free">Flix</span></a></div>
+        <button class="back-to-home-btn" onclick="window.location.href='index.html'">Back to Home</button>
+    </nav>
+
+    <div class="search-page-container">
+        <h1>Search Results</h1>
+
+        <div class="search-input-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInputPage" placeholder="Refine your search..." />
+        </div>
+
+        <div class="loader"></div>
+        <div id="searchResultsContent" class="movie-grid">
+            </div>
+
+        <div class="pagination">
+            <button id="prevPageBtn" disabled>Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPageBtn" disabled>Next</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // TMDb API Key (using the one from your latest index.html for consistency)
+            const API_KEY = "15d2ea6d0dc1d476efbca3eba2b9bbfb"; 
+            
+            // Correct API Base URL - THIS IS THE CRITICAL FIX
+            const API_BASE_URL = "https://api.themoviedb.org/3"; 
+            
+            const searchInputPage = document.getElementById("searchInputPage");
+            const searchResultsContent = document.getElementById("searchResultsContent");
+            const loader = document.querySelector(".loader");
+            const prevPageBtn = document.getElementById("prevPageBtn");
+            const nextPageBtn = document.getElementById("nextPageBtn");
+            const pageInfo = document.getElementById("pageInfo");
+
+            let currentQuery = '';
+            let currentPage = 1;
+            let totalPages = 1;
+            let searchTimeout;
+
+            // Function to fetch and display results
+            async function fetchAndDisplayResults(query, page = 1) {
+                if (!query || query.trim().length === 0) {
+                    searchResultsContent.innerHTML = "<p class='no-results-message'>Please enter a search term to find movies or TV shows.</p>";
+                    loader.style.display = "none";
+                    prevPageBtn.disabled = true;
+                    nextPageBtn.disabled = true;
+                    pageInfo.textContent = 'Page 0 of 0';
+                    return;
+                }
+
+                currentQuery = query; // Update current query
+                currentPage = page;   // Update current page
+
+                loader.style.display = "block";
+                searchResultsContent.innerHTML = ""; // Clear previous results
+                prevPageBtn.disabled = true; // Disable until we know if there's a previous page
+                nextPageBtn.disabled = true; // Disable until we know if there's a next page
+                pageInfo.textContent = `Page ${currentPage} of ...`; // Interim text
+
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/search/multi`, {
+                        params: {
+                            api_key: API_KEY,
+                            query: query,
+                            page: page // Pass the current page number
+                        }
+                    });
+                    const data = response.data;
+                    totalPages = data.total_pages; // Store total pages
+
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach(item => {
+                            const mediaType = item.media_type || (item.title ? "movie" : "tv");
+                            const imagePath = mediaType === "person" ? item.profile_path : item.poster_path;
+                            const title = item.title || item.name || item.original_name;
+                            const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+
+                            // Fallback for missing poster/profile path
+                            const finalImagePath = imagePath ? `https://image.tmdb.org/t/p/w500${imagePath}` : 'https://via.placeholder.com/500x750?text=No+Image'; // Larger placeholder
+
+                            // Only create card if there's an image path or it's not a person with no profile
+                            if (imagePath || (mediaType !== "person" && !imagePath)) { // show placeholder for movie/tv, exclude person with no image
+                                const movieCard = document.createElement('div');
+                                movieCard.classList.add('movie-card');
+
+                                // Corrected image URL construction for background-image style
+                                movieCard.innerHTML = `
+                                    <div class="movie-poster" style="background-image: url(${finalImagePath})"></div>
+                                    <div class="movie-info">
+                                        <div class="movie-title">${title}</div>
+                                        <div class="movie-rating">⭐ ${rating} ${mediaType === "person" ? '(Person)' : ''}</div>
+                                    </div>
+                                `;
+                                
+                                movieCard.addEventListener("click", () => {
+                                    window.location.href = `detail.html?id=${item.id}&type=${mediaType}`;
+                                });
+                                searchResultsContent.appendChild(movieCard);
+                            }
+                        });
+
+                        // If no actual movie/tv results after filtering
+                        if (searchResultsContent.children.length === 0) {
+                             searchResultsContent.innerHTML = `<p class='no-results-message'>No movies or TV shows found for "${query}". Try a different search term.</p>`;
+                        }
+
+                    } else {
+                        searchResultsContent.innerHTML = `<p class='no-results-message'>No results found for "${query}". Try a different search term.</p>`;
+                    }
+
+                    // Update pagination controls
+                    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+                    prevPageBtn.disabled = currentPage <= 1;
+                    nextPageBtn.disabled = currentPage >= totalPages;
+
+                } catch (error) {
+                    console.error("Error fetching search results:", error);
+                    // More user-friendly message based on common errors
+                    let errorMessage = "Error loading search results. Please try again.";
+                    if (error.response && error.response.status === 401) {
+                        errorMessage = "Authentication failed. Please check your API key.";
+                    } else if (error.message === "Network Error") {
+                        errorMessage = "Network connection failed. Please check your internet.";
+                    }
+                    searchResultsContent.innerHTML = `<p class='no-results-message'>${errorMessage}</p>`;
+                    pageInfo.textContent = `Error loading results`;
+                } finally {
+                    loader.style.display = "none";
+                }
+                // Scroll to top after new results load
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // Get initial query and page from URL and populate search bar
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialQuery = urlParams.get('q');
+            const initialPage = parseInt(urlParams.get('page')) || 1;
+
+            if (initialQuery) {
+                searchInputPage.value = initialQuery;
+                fetchAndDisplayResults(initialQuery, initialPage);
+            } else {
+                 searchResultsContent.innerHTML = "<p class='no-results-message'>Enter a search term above to find movies and TV shows.</p>";
+            }
+
+            // Event listener for search bar input on this page
+            searchInputPage.addEventListener("input", () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const query = searchInputPage.value.trim();
+                    // When input changes, reset to page 1 and update URL
+                    const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}${query ? '&page=1' : ''}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl); // Update URL without reloading
+                    fetchAndDisplayResults(query, 1); // Start new search from page 1
+                }, 300); // Debounce time
+            });
+
+            // Handle pressing Enter key in the search bar on this page
+            searchInputPage.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    const query = searchInputPage.value.trim();
+                    if (query.length > 0) {
+                        const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}&page=1`;
+                        window.location.href = newUrl; // Force a full reload for clear history
+                    }
+                }
+            });
+
+            // Pagination button event listeners
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    const newPage = currentPage - 1;
+                    const newUrl = `${window.location.pathname}?q=${encodeURIComponent(currentQuery)}&page=${newPage}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                    fetchAndDisplayResults(currentQuery, newPage);
+                }
+            });
+
+            nextPageBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    const newPage = currentPage + 1;
+                    const newUrl = `${window.location.pathname}?q=${encodeURIComponent(currentQuery)}&page=${newPage}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                    fetchAndDisplayResults(currentQuery, newPage);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

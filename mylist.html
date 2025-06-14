@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My List - AnasFlix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #141414;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .button-home {
+    position: adaptive;  /* Keeps it fixed even when scrolling */
+    top: 20px; /* Adjust top spacing */
+    right: 20px; /* Adjust right spacing */
+    background-color: #c60000; /* Blue color */
+    color: white; /* White text */
+    border: none; /* Remove default border */
+    padding: 10px 20px; /* Padding inside button */
+    font-size: 16px; /* Text size */
+    cursor: pointer; /* Pointer cursor on hover */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Shadow effect */
+    transition: background 0.3s ease-in-out; /* Smooth transition */
+}
+
+/* Hover effect */
+.button-home:hover {
+    background-color: #d50000; /* Darker blue on hover */
+}
+
+/* Responsive adjustment */
+@media (max-width: 600px) {
+    .button-home {
+        top: 10px;
+        right: 10px;
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}
+.brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff0000;
+        }
+        .mylist-container {
+            padding: 80px 20px;
+            text-align: center;
+        }
+        .movie-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .movie-card {
+            width: 200px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .movie-card:hover {
+            transform: scale(1.05);
+        }
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+        }
+        .movie-title {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+        }
+        .modal-content {
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            margin: 5% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 1000px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border-radius: 10px;
+        }
+        .close {
+            color: #ff4d4d;
+            font-size: 30px;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #ff0000;
+        }
+        .modal-title {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .modal-overview {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .modal-info {
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+        .play-button {
+            background: #ff0000;
+            color: white;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .play-button:hover {
+            background: #cc0000;
+        }
+        .remove-from-list {
+            background: #c90000;
+            color: white;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .remove-from-list:hover {
+            background: #ff0000;
+        }
+        /* Style the button */
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="brand">Anas<span class="free">Flix</span></div>
+    <button class="button-home" onclick="goHome()">Home</button>
+</nav>
+
+<div class="mylist-container">
+    <h1>My List</h1>
+    <div class="movie-grid" id="myListContainer"></div>
+</div>
+
+<!-- Modal for Movie Details -->
+<div id="movieModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 class="modal-title"></h2>
+        <p class="modal-overview"></p>
+        <div class="modal-info"></div>
+        <div id="tvSelectors"></div>
+        <button class="play-button">▶ Play</button>
+        <button class="remove-from-list">✖ Remove from List</button>
+    </div>
+</div>
+
+<script>
+    function loadMyList() {
+        const myListContainer = document.getElementById('myListContainer');
+        myListContainer.innerHTML = '';
+
+        let myList = JSON.parse(localStorage.getItem('myList')) || [];
+
+        if (myList.length === 0) {
+            myListContainer.innerHTML = '<p>Your list is empty.</p>';
+            return;
+        }
+
+        myList.forEach(item => {
+            const movieCard = document.createElement('div');
+            movieCard.className = 'movie-card';
+            movieCard.dataset.id = item.id;
+            movieCard.dataset.type = item.media_type || 'movie';
+
+            movieCard.innerHTML = `
+                <div class="movie-poster" style="background-image: url(https://image.tmdb.org/t/p/w500${item.poster_path})"></div>
+                <div class="movie-title">${item.title || item.name}</div>
+            `;
+
+            movieCard.addEventListener('click', () => showMovieDetails(item));
+            myListContainer.appendChild(movieCard);
+        });
+    }
+    // Add styles for TV selectors
+const tvSelectorsStyle = document.createElement('style');
+tvSelectorsStyle.textContent = `
+  #tvSelectors {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  #tvSelectors select {
+    background: linear-gradient(45deg, #000000, #ff0000);
+    border: none;
+    padding: 10px 15px;
+    color: #fff;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    min-width: 120px;
+  }
+
+  #tvSelectors select:hover,
+  #tvSelectors select:focus {
+    background: linear-gradient(45deg, #ff0000, #d83030);
+    box-shadow: 0 0 12px rgba(255, 0, 0, 0.3);
+    outline: none;
+  }
+
+  #tvSelectors option {
+    background-color: #141414;
+    color: #fff;
+  }
+`;
+document.head.appendChild(tvSelectorsStyle);
+
+// Update the showMovieDetails function
+async function showMovieDetails(item) {
+    const modal = document.getElementById('movieModal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    // Set background and basic info
+    modalContent.style.backgroundImage = `linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%), url(https://image.tmdb.org/t/p/original${item.backdrop_path})`;
+    modal.querySelector('.modal-title').textContent = item.title || item.name;
+    modal.querySelector('.modal-overview').textContent = item.overview;
+    modal.querySelector('.modal-info').innerHTML = `
+        <p>Rating: ⭐ ${item.vote_average.toFixed(1)}</p>
+        <p>Release Date: ${item.release_date || item.first_air_date}</p>
+    `;
+
+    const tvSelectors = document.getElementById('tvSelectors');
+    tvSelectors.innerHTML = '';
+
+    // Handle TV show specific elements
+    if (item.media_type === 'tv') {
+        const seasonSelect = document.createElement('select');
+        seasonSelect.id = 'seasonSelect';
+        
+        const episodeSelect = document.createElement('select');
+        episodeSelect.id = 'episodeSelect';
+
+        // Add labels
+        const seasonLabel = document.createElement('span');
+        seasonLabel.textContent = 'Season:';
+        seasonLabel.style.color = '#fff';
+        
+        const episodeLabel = document.createElement('span');
+        episodeLabel.textContent = 'Episode:';
+        episodeLabel.style.color = '#fff';
+
+        tvSelectors.appendChild(seasonSelect);  
+        tvSelectors.appendChild(episodeSelect);
+
+        try {
+            const response = await fetch(`https://api.themoviedb.org/3/tv/${item.id}?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb`);
+            const tvData = await response.json();
+            
+            // Populate seasons
+            seasonSelect.innerHTML = '';
+            tvData.seasons.forEach(season => {
+                const option = document.createElement('option');
+                option.value = season.season_number;
+                option.textContent = `Season ${season.season_number}`;
+                seasonSelect.appendChild(option);
+            });
+
+            // Update episodes when season changes
+            const updateEpisodes = () => {
+                const selectedSeason = tvData.seasons.find(
+                    season => season.season_number === parseInt(seasonSelect.value)
+                );
+                
+                episodeSelect.innerHTML = '';
+                if (selectedSeason) {
+                    for (let i = 1; i <= selectedSeason.episode_count; i++) {
+                        const option = document.createElement('option');
+                        option.value = i;
+                        option.textContent = `Episode ${i}`;
+                        episodeSelect.appendChild(option);
+                    }
+                }
+            };
+
+            seasonSelect.addEventListener('change', updateEpisodes);
+            updateEpisodes(); // Initialize episodes for first season
+
+            modal.querySelector('.play-button').onclick = () => {
+                window.location.href = `watch.html?movieId=${item.id}&type=tv&season=${seasonSelect.value}&episode=${episodeSelect.value}`;
+            };
+        } catch (error) {
+            console.error('Error fetching TV show details:', error);
+            tvSelectors.innerHTML = '<p style="color: red;">Error loading episodes</p>';
+        }
+    } else {
+        // For movies
+        modal.querySelector('.play-button').onclick = () => {
+            window.location.href = `watch.html?movieId=${item.id}&type=movie`;
+        };
+    }
+
+    // Remove from list button functionality
+    const removeButton = modal.querySelector('.remove-from-list');
+    removeButton.onclick = () => {
+        let myList = JSON.parse(localStorage.getItem('myList')) || [];
+        myList = myList.filter(listItem => listItem.id !== item.id);
+        localStorage.setItem('myList', JSON.stringify(myList));
+        modal.style.display = 'none';
+        loadMyList(); // Refresh the list
+    };
+
+    modal.style.display = 'block';
+}
+    function closeModal() {
+        document.getElementById('movieModal').style.display = 'none';
+    }
+
+    function goHome() {
+        window.location.href = 'index.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadMyList);
+</script>
+
+</body>
+</html>

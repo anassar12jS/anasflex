@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Content</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0077b6;
+            --secondary-blue: #00b4d8;
+            --dark-gradient-start: rgba(0, 0, 30, 0.8);
+            --dark-gradient-end: rgba(50, 20, 80, 0.6);
+            --button-gradient-start: rgba(0, 119, 182, 0.7);
+            --button-gradient-end: rgba(0, 0, 0, 0.7);
+            --button-hover-start: rgba(0, 119, 182, 0.9);
+            --button-hover-end: rgba(0, 212, 255, 0.9);
+            --control-button-start: rgba(108, 91, 123, 0.7);
+            --control-button-end: rgba(53, 92, 125, 0.7);
+            --control-button-hover-start: rgba(108, 91, 123, 0.9);
+            --control-button-hover-end: rgba(53, 92, 125, 0.9);
+            --select-gradient-start: #ff6b6b;
+            --select-gradient-end: #f06595;
+            --select-hover-start: #f06595;
+            --select-hover-end: #ff6b6b;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000;
+            overflow: hidden;
+            color: #fff; /* Default text color */
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px);
+            opacity: 0.4;
+            z-index: -1;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        .background::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--dark-gradient-start) 0%, var(--dark-gradient-end) 100%);
+        }
+
+        .video-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px; /* Add some padding for smaller screens */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        /* Provider Switcher */
+        .provider-switcher {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            max-width: 95%; /* Adjust max-width for better responsiveness */
+            width: auto;
+            padding: 5px;
+        }
+
+        .provider-btn {
+            flex: 1 1 auto;
+            min-width: 90px; /* Slightly reduced min-width for more buttons on small screens */
+            max-width: 150px; /* Max width to prevent excessive stretching */
+            text-align: center;
+            background: var(--button-gradient-start);
+            border: none;
+            padding: 10px 15px;
+            color: white;
+            font-size: 13px; /* Slightly smaller font for more buttons */
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(0, 153, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            white-space: nowrap; /* Prevent text wrapping */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Add ellipsis for overflowed text */
+        }
+
+        .provider-btn.active,
+        .provider-btn:hover {
+            background: linear-gradient(45deg, var(--button-hover-start), var(--button-hover-end));
+            box-shadow: 0 6px 20px rgba(0, 180, 216, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* Container for the TV selectors */
+        #tvSelectors {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px; /* Increased gap for better spacing */
+            margin: 80px 0 20px 0; /* Adjusted top margin to account for provider buttons */
+            z-index: 9; /* Ensure selectors are below provider buttons but above iframe */
+        }
+
+        /* Style for the season and episode select elements */
+        #tvSelectors select {
+            background: linear-gradient(45deg, var(--select-gradient-start), var(--select-gradient-end));
+            border: none;
+            padding: 10px 20px; /* Increased padding for better touch targets */
+            color: #fff;
+            font-size: 16px;
+            border-radius: 8px; /* Slightly more rounded */
+            cursor: pointer;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 8px rgba(255, 107, 107, 0.3); /* Adjusted shadow color */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            position: relative; /* For custom arrow positioning */
+            padding-right: 35px; /* Make space for custom arrow */
+        }
+
+        /* Custom arrow for the select */
+        #tvSelectors select:not([multiple])::after {
+            content: '▼';
+            font-size: 12px;
+            color: #fff;
+            position: absolute;
+            right: 15px; /* Adjusted right position */
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        /* Hide the default arrow on IE */
+        #tvSelectors select::-ms-expand {
+            display: none;
+        }
+
+        /* Hover and Focus States */
+        #tvSelectors select:hover,
+        #tvSelectors select:focus {
+            background: linear-gradient(45deg, var(--select-hover-start), var(--select-hover-end));
+            box-shadow: 0 0 12px rgba(255, 107, 107, 0.6); /* Adjusted shadow color */
+            outline: none;
+        }
+
+        /* Dropdown options styling (limited support) */
+        #tvSelectors option {
+            background-color: #333; /* Darker background for options */
+            color: #fff;
+        }
+
+        iframe {
+            width: 85%; /* Increased width for slightly larger video */
+            height: 75%; /* Slightly reduced height to accommodate selectors/controls */
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            background-color: #1a1a1a; /* Dark background for iframe before load */
+        }
+
+        iframe:hover {
+            box-shadow: 0 0 30px rgba(0, 180, 216, 0.4); /* Subtle glow on hover */
+        }
+
+        /* Controls */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            width: 90%;
+            max-width: 500px; /* Limit width on larger screens */
+        }
+
+        .back-btn,
+        .fullscreen-btn {
+            flex: 1 1 auto;
+            min-width: 130px; /* Slightly larger min-width */
+            text-align: center;
+            background: linear-gradient(45deg, var(--control-button-start), var(--control-button-end));
+            border: none;
+            padding: 12px 20px; /* Increased padding */
+            color: white;
+            font-size: 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(0, 153, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .back-btn:hover,
+        .fullscreen-btn:hover {
+            background: linear-gradient(45deg, var(--control-button-hover-start), var(--control-button-hover-end));
+            box-shadow: 0 6px 20px rgba(53, 92, 125, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .back-btn::before {
+            content: '⬅';
+            margin-right: 5px; /* Add space between icon and text */
+        }
+
+        .fullscreen-btn::before {
+            content: '⛶';
+            font-size: 18px;
+            margin-right: 5px; /* Add space between icon and text */
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border-top: 3px solid var(--secondary-blue);
+            border-right: 3px solid transparent;
+            box-shadow: 0 0 20px rgba(0, 180, 216, 0.5);
+            animation: spin 1s linear infinite;
+            z-index: 10;
+        }
+
+        .loader::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            border-top: 3px solid rgba(255, 255, 255, 0.8);
+            border-right: 3px solid transparent;
+            animation: spin 0.5s linear infinite reverse;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important; /* Use !important to ensure hiding */
+        }
+
+        .error-message {
+            color: #ff4d4d;
+            font-size: 18px;
+            text-align: center;
+            margin-top: 20px;
+            z-index: 11;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .provider-switcher {
+                top: 5px; /* Even less space on small screens */
+                flex-direction: row; /* Keep as row, but allow wrapping */
+                gap: 5px;
+                max-width: 100%;
+            }
+
+            .provider-btn {
+                flex: 1 1 calc(33% - 10px); /* 3 buttons per row, adjusted for gap */
+                min-width: unset; /* Remove min-width to allow shrinking */
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+
+            .controls {
+                bottom: 10px;
+                flex-direction: row; /* Keep as row, allow wrapping */
+                gap: 10px;
+                width: 95%;
+            }
+
+            .back-btn, .fullscreen-btn {
+                flex: 1 1 calc(50% - 5px); /* 2 buttons per row */
+                min-width: unset;
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            iframe {
+                width: 95%;
+                height: 65vh; /* Adjust height for smaller screens */
+            }
+
+            #tvSelectors {
+                margin: 70px 0 15px 0; /* Adjust margin */
+                flex-direction: column; /* Stack selectors vertically */
+                gap: 8px;
+            }
+
+            #tvSelectors select {
+                width: 80%; /* Make select elements take more width */
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .provider-btn {
+                flex: 1 1 calc(50% - 10px); /* 2 buttons per row on very small screens */
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+<body>
+    <div class="background"></div>
+
+    <div class="video-container">
+        <div class="provider-switcher">
+            </div>
+
+        <div id="tvSelectors" class="hidden">
+            <select id="seasonSelect"></select>
+            <select id="episodeSelect"></select>
+        </div>
+
+        <div class="loader"></div>
+        <iframe src="" frameborder="0" allowfullscreen></iframe>
+
+        <div class="controls">
+            <button class="back-btn">Back</button>
+            <button class="fullscreen-btn">Fullscreen</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const TMDB_API_KEY = '15d2ea6d0dc1d476efbca3eba2b9bbfb'; // Keep this secure in a real app (server-side)
+
+        const PROVIDER_INFO = {
+            vidsrc: { name: 'VidSrc', moviePrefix: 'https://vidsrc.su/embed/movie/', tvPrefix: 'https://vidsrc.su/embed/tv/' },
+            embed: { name: 'EembedSU', moviePrefix: 'https://embed.su/embed/movie/', tvPrefix: 'https://embed.su/embed/tv/' },
+            VIDSRCDEV: { name: 'VIDSRC-DEV', moviePrefix: 'https://vidsrc.xyz/embed/movie/', tvPrefix: 'https://vidsrc.xyz/embed/tv/' },
+            VIDSRCto: { name: 'VIDSRCto', moviePrefix: 'https://vidsrc.to/embed/movie/', tvPrefix: 'https://vidsrc.to/embed/tv/' },
+            Playercc: { name: 'VIDEASY', moviePrefix: 'https://player.videasy.net/movie/', tvPrefix: 'https://player.videasy.net/tv/' },
+            VIDSRCicu: { name: 'VIDSRCicu', moviePrefix: 'https://vidsrc.icu/embed/movie/', tvPrefix: 'https://vidsrc.icu/embed/tv/' },
+            VIDSRCtt: { name: 'VIDFAST', moviePrefix: 'https://vidfast.pro/movie/', tvPrefix: 'https://vidfast.pro/tv/' },
+        };
+
+        // --- DOM Elements ---
+        const iframe = document.querySelector('iframe');
+        const loader = document.querySelector('.loader');
+        const background = document.querySelector('.background');
+        const providerSwitcher = document.querySelector('.provider-switcher');
+        const backBtn = document.querySelector('.back-btn');
+        const fullscreenBtn = document.querySelector('.fullscreen-btn');
+        const tvSelectorsContainer = document.getElementById('tvSelectors');
+        const seasonSelect = document.getElementById('seasonSelect');
+        const episodeSelect = document.getElementById('episodeSelect');
+
+        // --- Global State ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const movieId = urlParams.get('movieId');
+        const type = urlParams.get('type'); // 'movie' or 'tv'
+        let currentSeason = urlParams.get('season') || '1'; // Default to '1' if not provided
+        let currentEpisode = urlParams.get('episode') || '1'; // Default to '1' if not provided
+        let currentProviderKey = 'vidsrc'; // Default active provider
+
+        // --- Functions ---
+
+        /**
+         * Displays an error message on the screen.
+         * @param {string} message - The error message to display.
+         */
+        const displayError = (message) => {
+            const errorMessageDiv = document.createElement('div');
+            errorMessageDiv.classList.add('error-message');
+            errorMessageDiv.textContent = `Error: ${message}`;
+            document.querySelector('.video-container').insertBefore(errorMessageDiv, loader);
+            loader.classList.add('hidden'); // Hide loader on error
+            iframe.classList.add('hidden'); // Hide iframe on error
+            providerSwitcher.classList.add('hidden'); // Hide providers on error
+            tvSelectorsContainer.classList.add('hidden'); // Hide selectors on error
+        };
+
+        /**
+         * Dynamically creates provider buttons.
+         */
+        const createProviderButtons = () => {
+            providerSwitcher.innerHTML = ''; // Clear existing buttons
+            for (const key in PROVIDER_INFO) {
+                const btn = document.createElement('button');
+                btn.classList.add('provider-btn');
+                btn.dataset.provider = key;
+                btn.textContent = PROVIDER_INFO[key].name;
+                btn.addEventListener('click', () => {
+                    setProvider(key);
+                });
+                providerSwitcher.appendChild(btn);
+            }
+            // Set initial active state after buttons are created
+            const initialActiveBtn = document.querySelector(`[data-provider="${currentProviderKey}"]`);
+            if (initialActiveBtn) {
+                initialActiveBtn.classList.add('active');
+            }
+        };
+
+        /**
+         * Updates the iframe src based on the selected provider and content type.
+         * Shows loader while content is loading.
+         * @param {string} providerKey - The key of the selected provider.
+         */
+        const setProvider = (providerKey) => {
+            if (!PROVIDER_INFO[providerKey]) {
+                console.error(`Invalid provider key: ${providerKey}`);
+                displayError('Selected provider not found.');
+                return;
+            }
+
+            currentProviderKey = providerKey;
+            loader.classList.remove('hidden');
+            iframe.classList.add('hidden'); // Hide iframe while loading new content
+
+            const activeBtn = document.querySelector('.provider-btn.active');
+            if (activeBtn) {
+                activeBtn.classList.remove('active');
+            }
+            const newActiveBtn = document.querySelector(`[data-provider="${providerKey}"]`);
+            if (newActiveBtn) {
+                newActiveBtn.classList.add('active');
+            }
+
+            let src = '';
+            if (type === 'tv') {
+                src = `${PROVIDER_INFO[providerKey].tvPrefix}${movieId}/${currentSeason}/${currentEpisode}`;
+            } else if (type === 'movie') {
+                src = `${PROVIDER_INFO[providerKey].moviePrefix}${movieId}`;
+            } else {
+                displayError('Invalid content type specified in URL.');
+                return;
+            }
+
+            console.log(`Loading: ${src}`);
+            iframe.src = src;
+        };
+
+        /**
+         * Fetches TMDB data and sets the background image.
+         */
+        const setBackground = async () => {
+            if (!movieId || !type) {
+                displayError('Movie ID or Type missing from URL.');
+                return;
+            }
+            if (!TMDB_API_KEY) {
+                console.warn('TMDB API Key is missing. Background image will not load.');
+                return;
+            }
+
+            try {
+                const response = await axios.get(`https://api.themoviedb.org/3/${type}/${movieId}`, {
+                    params: { api_key: TMDB_API_KEY }
+                });
+                const data = response.data;
+                if (data.backdrop_path) {
+                    background.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${data.backdrop_path})`;
+                }
+            } catch (error) {
+                console.error('Error fetching TMDB data for background:', error);
+                // No need to display a user-facing error for background image failure
+            }
+        };
+
+        /**
+         * Populates the episode select dropdown based on the selected season's episode count.
+         */
+        const updateEpisodeSelect = () => {
+            const selectedOption = seasonSelect.options[seasonSelect.selectedIndex];
+            if (!selectedOption) {
+                episodeSelect.innerHTML = '<option>No Episodes</option>';
+                currentEpisode = '1'; // Reset episode if no season selected
+                return;
+            }
+
+            const episodeCount = parseInt(selectedOption.dataset.episodeCount, 10);
+            episodeSelect.innerHTML = '';
+
+            if (isNaN(episodeCount) || episodeCount <= 0) {
+                episodeSelect.innerHTML = '<option>No Episodes</option>';
+                currentEpisode = '1';
+                return;
+            }
+
+            for (let i = 1; i <= episodeCount; i++) {
+                const epOption = document.createElement('option');
+                epOption.value = i;
+                epOption.textContent = `Episode ${i}`;
+                episodeSelect.appendChild(epOption);
+            }
+
+            // Try to select the URL-provided episode, or default to 1 if not valid
+            if (urlParams.has('episode') && parseInt(urlParams.get('episode'), 10) <= episodeCount) {
+                episodeSelect.value = urlParams.get('episode');
+            } else {
+                episodeSelect.value = '1'; // Default to first episode
+            }
+            currentEpisode = episodeSelect.value;
+            setProvider(currentProviderKey); // Update iframe after selectors change
+        };
+
+        /**
+         * Handles TV show specific initialization (season/episode selectors).
+         */
+        const setupTvShowSelectors = async () => {
+            tvSelectorsContainer.classList.remove('hidden'); // Show selectors
+            if (!TMDB_API_KEY) {
+                displayError('TMDB API Key is missing for TV show data.');
+                return;
+            }
+
+            try {
+                const response = await axios.get(`https://api.themoviedb.org/3/tv/${movieId}`, {
+                    params: { api_key: TMDB_API_KEY }
+                });
+                const tvData = response.data;
+
+                if (tvData.seasons && tvData.seasons.length > 0) {
+                    seasonSelect.innerHTML = '';
+                    tvData.seasons.forEach(season => {
+                        const option = document.createElement('option');
+                        option.value = season.season_number;
+                        option.textContent = season.name || `Season ${season.season_number}`;
+                        option.dataset.episodeCount = season.episode_count; // Store episode count
+                        seasonSelect.appendChild(option);
+                    });
+
+                    // Select the season from URL or default to the first one (excluding season 0 often)
+                    if (urlParams.has('season') && tvData.seasons.some(s => String(s.season_number) === urlParams.get('season'))) {
+                        seasonSelect.value = urlParams.get('season');
+                    } else if (tvData.seasons.length > 1 && tvData.seasons[0].season_number === 0) {
+                        // If season 0 exists, default to season 1 if available, otherwise season 0
+                        seasonSelect.value = tvData.seasons.find(s => s.season_number === 1)?.season_number || tvData.seasons[0].season_number;
+                    } else {
+                        seasonSelect.selectedIndex = 0;
+                    }
+                    currentSeason = seasonSelect.value;
+                    updateEpisodeSelect(); // Populate episodes for the initial season
+                } else {
+                    seasonSelect.innerHTML = '<option>No Seasons Found</option>';
+                    episodeSelect.innerHTML = '<option>No Episodes</option>';
+                    displayError('No season data found for this TV show.');
+                }
+            } catch (error) {
+                console.error('Error fetching TV details:', error);
+                displayError('Could not load TV show details. Please try again later.');
+                seasonSelect.innerHTML = '<option>Error Loading Seasons</option>';
+                episodeSelect.innerHTML = '<option>Error Loading Episodes</option>';
+            }
+        };
+
+        // --- Event Listeners ---
+
+        iframe.onload = () => {
+            loader.classList.add('hidden');
+            iframe.classList.remove('hidden'); // Show iframe once loaded
+        };
+
+        iframe.onerror = () => {
+            loader.classList.add('hidden');
+            displayError('Failed to load video. The provider might be down or the content is unavailable.');
+        };
+
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'index.html'; // Assuming 'index.html' is your main page
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                iframe.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    alert('Fullscreen failed. Your browser may prevent automatic fullscreen or require user interaction.');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        seasonSelect.addEventListener('change', () => {
+            currentSeason = seasonSelect.value;
+            updateEpisodeSelect(); // This will also call setProvider
+        });
+
+        episodeSelect.addEventListener('change', () => {
+            currentEpisode = episodeSelect.value;
+            setProvider(currentProviderKey);
+        });
+
+        // --- Initialization ---
+
+        const initializePage = async () => {
+            if (!movieId || !type) {
+                displayError('Missing movie ID or content type in URL. Please go back to the home page.');
+                return;
+            }
+
+            createProviderButtons();
+            await setBackground();
+            
+            if (type === 'tv') {
+                await setupTvShowSelectors();
+            } else {
+                // For movies, just set the initial provider
+                setProvider(currentProviderKey);
+            }
+        };
+
+        initializePage();
+    </script>
+
+</body>
+</html>

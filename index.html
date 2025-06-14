@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AnasFlix - Stream Movies & TV Shows Online</title>
+
+    <link rel="icon" type="image/x-icon" href="assets/a.ico" />
+
+    <meta name="description" content="AnasFlix - Stream movies and TV shows online for free. Discover trending, top-rated, and popular content." />
+    <meta name="keywords" content="movies, streaming, free movies, TV shows, AnasFlix" />
+    <meta name="author" content="Your Name" />
+    <meta name="robots" content="index, follow" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "AnasFlix",
+      "url": "https://anasflix.pages.dev",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://anasflix.pages.dev/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    />
+
+    <style>
+        /* Reset and base */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #141414;
+            color: #fff;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+        a:focus {
+            outline: 2px solid #e50914;
+            outline-offset: 2px;
+        }
+        button {
+            font-family: inherit;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141414;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #ff0000, #b30000);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #ff4d4d, #ff0000);
+        }
+        /* Firefox scrollbar */
+        body, html {
+            scrollbar-width: thin;
+            scrollbar-color: #b30000 #141414;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            background-color: transparent;
+            transition: background-color 0.4s ease;
+            z-index: 1000;
+        }
+        .navbar.scrolled {
+            background-color: #141414;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+        }
+        .brand {
+            font-size: 28px;
+            font-weight: 900;
+            color: #e50914;
+            user-select: none;
+        }
+        .free {
+            color: #fff;
+        }
+
+        /* Hamburger */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 25px;
+            height: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1100;
+        }
+        .hamburger span {
+            display: block;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .hamburger[aria-expanded="true"] span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        .hamburger[aria-expanded="true"] span:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger[aria-expanded="true"] span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* Search container */
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 6px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            max-width: 380px; /* Slightly increased max-width for the search input on PC */
+            width: 100%;
+        }
+        .search-container:hover,
+        .search-container.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .search-icon {
+            color: #fff;
+            font-size: 18px;
+            margin-right: 8px;
+            pointer-events: none;
+        }
+        .search-input {
+            flex-grow: 1;
+            font-size: 14px;
+            border: none;
+            background: transparent;
+            outline: none;
+            color: white;
+            min-width: 0;
+        }
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Updated Search results dropdown */
+        .search-results {
+            position: absolute;
+            top: 115%; /* Keep a little space from the search bar */
+            left: 0; /* Align left edge with the search input */
+            right: 0; /* Stretch to the right edge of the search input */
+
+            width: 100%; /* Default to 100% of the parent search-container */
+            max-width: 900px; /* Significantly increased max-width for desktop */
+            min-width: 600px; /* Ensure a minimum width even if parent is small */
+
+            max-height: 500px; /* Allow for more results to be visible */
+            background: rgba(0, 0, 0, 0.95);
+            border-radius: 12px;
+            overflow-y: auto;
+            box-shadow: 0 8px 25px rgba(229, 9, 20, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            display: none;
+            z-index: 1500;
+            backdrop-filter: blur(8px);
+            
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeInDownResults 0.3s ease-out forwards;
+        }
+
+        /* Adjust positioning for wider results if search container isn't wide enough */
+        @media (min-width: 769px) { /* Adjust this breakpoint as needed for your design */
+            .search-results {
+                left: 50%;
+                transform: translateX(-50%);
+                width: auto; /* Allow width to be determined by max-width */
+            }
+        }
+
+        /* New keyframe animation for the dropdown */
+        @keyframes fadeInDownResults {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px; /* Slightly more padding for items inside */
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .search-result-item:hover,
+        .search-result-item:focus {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+            outline: none;
+        }
+        .search-result-item img {
+            width: 70px; /* Slightly larger poster thumbnails */
+            height: 105px; /* Maintain aspect ratio */
+            object-fit: cover;
+            margin-right: 18px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .search-result-title {
+            font-weight: 700;
+            font-size: 17px; /* Slightly larger title font */
+            color: #fff;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .search-result-type {
+            font-size: 14px; /* Slightly larger type font */
+            color: #bbb;
+        }
+
+        /* Styles for the "View All Results" link and "No results" message */
+        .view-all-results-link,
+        .no-results-message {
+            display: block;
+            text-align: center;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #e50914; /* Netflix red */
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background-color 0.2s ease;
+        }
+        .view-all-results-link:hover {
+            background-color: rgba(229, 9, 20, 0.1);
+            border-radius: 0 0 10px 10px; /* Round bottom corners */
+        }
+        .no-results-message {
+            color: #ccc;
+            font-style: italic;
+            border-top: none; /* No border for no results message */
+        }
+
+
+        /* Right buttons */
+        .right-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .signup-btn {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 13px 30px;
+            border-radius: 26px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.7);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .signup-btn:hover,
+        .signup-btn:focus {
+            background-color: #b0060f;
+            outline: none;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 75vh;
+            padding: 0 8% 0 6%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            background-size: cover;
+            background-position: center center;
+            color: white;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to right,
+                rgba(20, 20, 20, 0.9) 20%,
+                rgba(20, 20, 20, 0.6) 60%,
+                rgba(20, 20, 20, 0.3) 100%
+            );
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            max-width: 550px;
+            z-index: 1;
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        #heroTitle {
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
+            line-height: 1.1;
+        }
+
+        #heroOverview {
+            font-size: 18px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+            text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.7);
+        }
+
+        #heroMoreInfoBtn {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.7);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #heroMoreInfoBtn:hover,
+        #heroMoreInfoBtn:focus {
+            background-color: #b0060f;
+            box-shadow: 0 6px 20px rgba(229, 9, 20, 0.9);
+            outline: none;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Movie Rows */
+        .container {
+            padding: 20px 40px;
+            margin-top: -150px;
+            position: relative;
+            z-index: 10;
+        }
+        .category-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: #fff;
+            user-select: none;
+        }
+        .row-container {
+            position: relative;
+            margin-bottom: 50px;
+        }
+        .row {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            gap: 12px;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+        }
+        .row::-webkit-scrollbar {
+            display: none;
+        }
+        .movie-card {
+            flex: 0 0 auto;
+            width: 180px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            background-color: #1c1c1c;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+            user-select: none;
+        }
+        .movie-card:hover,
+        .movie-card:focus {
+            outline: none;
+            transform: scale(1.07) translateY(-6px);
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.8);
+            border-color: rgba(229, 9, 20, 0.9);
+            background-color: #2a2a2a;
+        }
+        .movie-poster {
+            width: 100%;
+            height: 270px;
+            border-radius: 10px 10px 0 0;
+            background-size: cover;
+            background-position: center;
+            user-select: none;
+        }
+        .movie-info {
+            padding: 12px 10px;
+        }
+        .movie-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: text;
+        }
+        .movie-rating {
+            font-size: 13px;
+            color: #d0ff00;
+            font-weight: 700;
+            user-select: none;
+        }
+
+        /* Row Navigation Buttons */
+        .row-nav {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+            z-index: 20;
+            padding: 0 10px;
+        }
+        .nav-btn {
+            pointer-events: all;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: rgb(255, 255, 255);
+            font-size: 28px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
+            transition: background-color 0.3s ease;
+            user-select: none;
+        }
+        .nav-btn:hover,
+        .nav-btn:focus {
+            background-color: rgba(229, 9, 20, 0.9);
+            outline: none;
+        }
+
+        /* Loader */
+        .loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 4000;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 20px;
+            text-align: center;
+            color: #808080;
+            border-top: 1px solid #222;
+            margin-top: 50px;
+            user-select: none;
+        }
+        .footer-quote {
+            font-style: italic;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .social-links a {
+            color: #808080;
+            font-size: 26px;
+            margin: 0 15px;
+            transition: color 0.3s ease;
+            display: inline-block;
+        }
+        .social-links a:hover,
+        .social-links a:focus {
+            color: #e50914;
+            outline: none;
+        }
+        .social-links a i {
+            display: inline-block;
+            font-size: 26px;
+            width: auto;
+            height: auto;
+            color: inherit;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+            .hamburger {
+                display: flex;
+            }
+            .search-container {
+                display: none;
+                position: absolute;
+                top: 60px;
+                left: 5%;
+                right: 5%;
+                max-width: none;
+                width: auto;
+                z-index: 1500;
+            }
+            .mobile-search-active .search-container {
+                display: flex !important;
+            }
+            .right-buttons {
+                gap: 10px;
+            }
+            #heroTitle {
+                font-size: 36px;
+            }
+            #heroOverview {
+                font-size: 16px;
+                margin-bottom: 20px;
+            }
+            #heroMoreInfoBtn {
+                padding: 12px 24px;
+                font-size: 16px;
+            }
+            .movie-card {
+                width: 140px;
+            }
+            .movie-poster {
+                height: 210px;
+            }
+            .category-title {
+                font-size: 22px;
+            }
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 22px;
+            }
+            .search-results {
+                width: 95%; /* Make it wider on smaller screens, relative to viewport */
+                left: 50%; /* Re-center for mobile */
+                transform: translateX(-50%);
+                padding: 10px; /* Slightly less padding on very small screens */
+                max-width: unset; /* Remove max-width on mobile so it can be 95% */
+                min-width: unset; /* Remove min-width on mobile */
+            }
+            /* Also ensure the mobile search active state is handled correctly for positioning */
+            .mobile-search-active .search-container {
+                left: 50%;
+                transform: translateX(-50%);
+                max-width: 90%; /* Limit search input width on mobile when active */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar" role="navigation" aria-label="Main navigation">
+            <div class="brand">Anas<span class="free">Flix</span></div>
+
+            <button
+                class="hamburger"
+                aria-label="Toggle search"
+                aria-expanded="false"
+                aria-controls="search-container"
+                id="hamburgerBtn"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <div class="search-container" id="search-container">
+                <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                <input
+                    type="text"
+                    placeholder="Search movies and TV shows..."
+                    class="search-input"
+                    aria-label="Search movies and TV shows"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <div class="search-results" role="listbox" aria-label="Search results"></div>
+            </div>
+
+            <div class="right-buttons">
+                <button
+                    class="signup-btn"
+                    onclick="window.location.href='mylist.html'"
+                    aria-label="Go to My List"
+                >
+                    My List
+                </button>
+                <button
+                    class="signup-btn"
+                    onclick="window.location.href='info.html'"
+                    aria-label="Go to Info"
+                >
+                    Info
+                </button>
+            </div>
+        </nav>
+
+        <main>
+            <section class="hero" role="banner" aria-label="Featured movie">
+                <div class="hero-content">
+                    <h1 id="heroTitle"></h1>
+                    <p id="heroOverview"></p>
+                    <button id="heroMoreInfoBtn">More Info</button>
+                </div>
+            </section>
+
+            <section id="moviesContainer" class="container" aria-live="polite" aria-atomic="true"></section>
+        </main>
+
+        <footer>
+            <p class="footer-quote" aria-label="Footer quote">
+                "If buying isn't owning then piracy isn't stealing"
+            </p>
+            <div class="social-links">
+                <a
+                    href="https://twitter.com/yourprofile"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Twitter"
+                >
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a
+                    href="https://github.com/anasflix"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="GitHub"
+                >
+                    <i class="fab fa-github"></i>
+                </a>
+                <a
+                    href="https://instagram.com/xainyx_"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                >
+                    <i class="fab fa-instagram"></i>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <div class="loader" aria-label="Loading content" role="status" aria-live="polite" aria-busy="true">
+        <svg width="50" height="50" viewBox="0 0 50 50" role="img" aria-hidden="true" focusable="false">
+            <circle
+                cx="25"
+                cy="25"
+                r="20"
+                fill="none"
+                stroke="#e50914"
+                stroke-width="5"
+                stroke-dasharray="1,200"
+                stroke-dashoffset="0"
+                stroke-linecap="round"
+            >
+                <animate
+                    attributeName="stroke-dasharray"
+                    dur="1.5s"
+                    repeatCount="indefinite"
+                    values="1,200;90,150;1,200"
+                />
+                <animate
+                    attributeName="stroke-dashoffset"
+                    dur="1.5s"
+                    repeatCount="indefinite"
+                    values="0;-35;-124"
+                />
+            </circle>
+        </svg>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js" defer></script>
+
+<script defer>
+    document.addEventListener("DOMContentLoaded", () => {
+        const API_KEY = "7036b7c42a26d026c98e7667e82cbcb1";
+        const API_BASE_URL = "https://api.themoviedb.org/3";
+        const MAX_DROPDOWN_RESULTS = 6; // How many results to show in the dropdown
+
+        const moviesContainer = document.getElementById("moviesContainer");
+        const loader = document.querySelector(".loader");
+        const hero = document.querySelector(".hero");
+        const navbar = document.querySelector(".navbar");
+
+        const heroTitle = document.getElementById("heroTitle");
+        const heroOverview = document.getElementById("heroOverview");
+        const heroMoreInfoBtn = document.getElementById("heroMoreInfoBtn");
+
+        const searchInput = document.querySelector(".search-input");
+        const searchResultsContainer = document.querySelector(".search-results");
+        const searchContainer = document.querySelector(".search-container");
+
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const pageWrapper = document.querySelector(".page-wrapper");
+
+        let searchTimeout;
+
+        const homeCategories = [
+            { title: "Trending This Week", endpoint: "trending/movie/week" },
+            { title: "Top Rated Movies", endpoint: "movie/top_rated", params: { "vote_count.gte": 1500 } },
+            { title: "Popular Movies", endpoint: "movie/popular" },
+            { title: "Popular TV Shows", endpoint: "tv/popular" },
+        ];
+
+        async function fetchHomepageContent() {
+            moviesContainer.innerHTML = "";
+            loader.style.display = "block";
+
+            try {
+                const popularMoviesData = await fetchFromAPI("movie/popular");
+                if (popularMoviesData && popularMoviesData.results.length > 0) {
+                    updateHero(popularMoviesData.results[0]);
+                }
+
+                for (const category of homeCategories) {
+                    const data = await fetchFromAPI(category.endpoint, category.params);
+                    if (data && data.results) {
+                        createCategoryRow(category.title, data.results);
+                    }
+                }
+            } finally {
+                loader.style.display = "none";
+            }
+        }
+
+        function updateHero(item) {
+            hero.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${item.backdrop_path})`;
+            heroTitle.textContent = item.title || item.name;
+            heroOverview.textContent = item.overview;
+            heroMoreInfoBtn.onclick = () => {
+                window.location.href = `detail.html?id=${item.id}&type=${item.media_type || (item.title ? "movie" : "tv")}`;
+            };
+        }
+
+        async function fetchFromAPI(endpoint, params = {}) {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/${endpoint}`, {
+                    params: { api_key: API_KEY, ...params },
+                });
+                return response.data;
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                return null;
+            }
+        }
+
+        function createCategoryRow(title, items) {
+            const titleEl = document.createElement("h2");
+            titleEl.className = "category-title";
+            titleEl.textContent = title;
+
+            const rowContainer = document.createElement("div");
+            rowContainer.className = "row-container";
+
+            const row = document.createElement("div");
+            row.className = "row";
+
+            items.forEach((item) => {
+                if (item.poster_path || item.profile_path) {
+                    const card = createMovieCard(item);
+                    row.appendChild(card);
+                }
+            });
+
+            if (row.children.length === 0) return;
+
+            moviesContainer.appendChild(titleEl);
+
+            const navContainer = document.createElement("div");
+            navContainer.className = "row-nav";
+            navContainer.innerHTML = `
+                <button class="nav-btn left-btn" aria-label="Scroll left">&#10094;</button>
+                <button class="nav-btn right-btn" aria-label="Scroll right">&#10095;</button>
+            `;
+
+            rowContainer.appendChild(row);
+            rowContainer.appendChild(navContainer);
+            moviesContainer.appendChild(rowContainer);
+
+            navContainer.querySelector(".left-btn").addEventListener("click", () => scrollRow(row, -1));
+            navContainer.querySelector(".right-btn").addEventListener("click", () => scrollRow(row, 1));
+            enableRowSwipe(row);
+        }
+
+        function createMovieCard(item) {
+            const card = document.createElement("div");
+            card.className = "movie-card";
+            card.tabIndex = 0;
+            card.setAttribute("role", "button");
+            card.setAttribute("aria-pressed", "false");
+
+            const mediaType = item.media_type || (item.title ? "movie" : "tv");
+            const imagePath = mediaType === "person" ? item.profile_path : item.poster_path;
+            const altText = item.title || item.name || item.original_name;
+
+            card.innerHTML = `
+                <div class="movie-poster" style="background-image: url(https://image.tmdb.org/t/p/w500${imagePath})" role="img" aria-label="${altText} poster"></div>
+                <div class="movie-info">
+                    <div class="movie-title">${item.title || item.name || item.original_name}</div>
+                    <div class="movie-rating" aria-label="Rating: ${item.vote_average ? item.vote_average.toFixed(1) : 'N/A'} stars">⭐ ${item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}</div>
+                </div>
+            `;
+            
+            card.addEventListener("click", () => {
+                window.location.href = `detail.html?id=${item.id}&type=${mediaType}`;
+            });
+            card.addEventListener("keypress", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    card.click();
+                }
+            });
+            return card;
+        }
+
+        function scrollRow(row, direction) {
+            const scrollAmount = direction * row.offsetWidth * 0.75;
+            row.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        }
+
+        function enableRowSwipe(row) {
+            let isDown = false,
+                startX,
+                scrollLeft;
+
+            const start = (e) => {
+                isDown = true;
+                startX = (e.pageX || e.touches[0].pageX) - row.offsetLeft;
+                scrollLeft = row.scrollLeft;
+                row.style.scrollBehavior = "auto";
+            };
+            const end = () => {
+                isDown = false;
+                row.style.scrollBehavior = "smooth";
+            };
+            const move = (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = (e.pageX || e.touches[0].pageX) - row.offsetLeft;
+                const walk = (x - startX) * 1.5;
+                row.scrollLeft = scrollLeft - walk;
+            };
+
+            row.addEventListener("mousedown", start);
+            row.addEventListener("mouseleave", end);
+            row.addEventListener("mouseup", end);
+            row.addEventListener("mousemove", move);
+            row.addEventListener("touchstart", start);
+            row.addEventListener("touchend", end);
+            row.addEventListener("touchmove", move);
+        }
+
+        // MODIFIED: searchItems now saves query to sessionStorage
+        async function searchItems(query) {
+            const data = await fetchFromAPI("search/multi", { query });
+            if (data && data.results) {
+                // Filter out people or other media types if you only want movies/tv in dropdown
+                const filteredResults = data.results.filter(item => 
+                    (item.media_type === "movie" || item.media_type === "tv") && item.poster_path
+                );
+                // Save the query to sessionStorage here
+                if (query.length > 2) { // Only save if a substantial query was made
+                    sessionStorage.setItem('lastSearchQuery', query);
+                } else {
+                    sessionStorage.removeItem('lastSearchQuery'); // Clear if query is too short
+                }
+                
+                displaySearchResults(
+                    filteredResults.slice(0, MAX_DROPDOWN_RESULTS), // Show limited in dropdown
+                    data.total_results, // Pass total results for the "View All" link
+                    query // Pass the original query
+                );
+            } else {
+                // If no results or API error, still try to display a message
+                sessionStorage.removeItem('lastSearchQuery'); // Clear the last search if it yielded no results
+                displaySearchResults([], 0, query); 
+            }
+        }
+
+        function displaySearchResults(results, totalResults, query) {
+            searchResultsContainer.innerHTML = "";
+            
+            // Show "No results found" if applicable
+            if (results.length === 0 && query && query.length > 2) {
+                const noResultsDiv = document.createElement("div");
+                noResultsDiv.className = "no-results-message";
+                noResultsDiv.textContent = `No results found for "${query}".`;
+                searchResultsContainer.appendChild(noResultsDiv);
+                searchResultsContainer.style.display = "block";
+                return; // Exit function if no results for a valid query
+            } else if (results.length === 0 && query.length <=2) { // Hide if query is too short for results
+                 searchResultsContainer.style.display = "none";
+                 return;
+            }
+
+            // Display individual search result items
+            results.forEach((item) => {
+                const resultItem = document.createElement("div");
+                resultItem.className = "search-result-item";
+                resultItem.tabIndex = 0;
+                
+                const mediaType = item.media_type || (item.title ? "movie" : "tv");
+                const imagePath = mediaType === "person" ? item.profile_path : item.poster_path;
+                // Fallback for missing poster/profile path if any item makes it through filters without one
+                const finalImagePath = imagePath ? `https://image.tmdb.org/t/p/w92${imagePath}` : 'https://via.placeholder.com/92x138?text=No+Image';
+                const altText = item.title || item.name || item.original_name;
+
+                resultItem.innerHTML = `
+                    <img src="${finalImagePath}" 
+                         alt="${altText}" loading="lazy" 
+                         onerror="this.src='https://via.placeholder.com/92x138?text=Error'; this.onerror=null;">
+                    <div>
+                        <div class="search-result-title">${altText}</div>
+                        <div class="search-result-type">${
+                            mediaType === "tv" ? "TV Show" : (mediaType === "movie" ? "Movie" : "Person")
+                        }</div>
+                    </div>
+                `;
+                resultItem.addEventListener("click", () => {
+                    // When a result is clicked, clear the search input and hide results
+                    searchResultsContainer.style.display = "none";
+                    searchInput.value = "";
+                    // IMPORTANT: Clear sessionStorage when clicking a result, so it doesn't reappear
+                    sessionStorage.removeItem('lastSearchQuery'); 
+                    window.location.href = `detail.html?id=${item.id}&type=${mediaType}`;
+                });
+                resultItem.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        resultItem.click();
+                    }
+                });
+                searchResultsContainer.appendChild(resultItem);
+            });
+
+            // Add "View All Results" link if there are more results than currently displayed
+            if (totalResults > results.length) {
+                const viewAllLink = document.createElement("a");
+                viewAllLink.href = `search.html?q=${encodeURIComponent(query)}`;
+                viewAllLink.className = "view-all-results-link";
+                viewAllLink.textContent = `View All ${totalResults} Results`;
+                searchResultsContainer.appendChild(viewAllLink);
+            }
+
+            searchResultsContainer.style.display = "block";
+        }
+
+        function initialize() {
+            window.addEventListener("scroll", () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add("scrolled");
+                } else {
+                    navbar.classList.remove("scrolled");
+                }
+            });
+
+            // NEW: Load last search query on page load
+            const lastSearch = sessionStorage.getItem('lastSearchQuery');
+            if (lastSearch) {
+                searchInput.value = lastSearch;
+                // Trigger a search immediately to display results if coming back from another page
+                searchItems(lastSearch); 
+            }
+
+
+            searchInput.addEventListener("input", () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const query = searchInput.value.trim();
+                    if (query.length > 2) {
+                        searchItems(query);
+                    } else {
+                        // If user clears the input, hide results and clear session storage
+                        searchResultsContainer.style.display = "none";
+                        sessionStorage.removeItem('lastSearchQuery'); 
+                    }
+                }, 300);
+            });
+
+            // NEW: Handle Enter key press on search input to go to search.html
+            searchInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    const query = searchInput.value.trim();
+                    if (query.length > 0) {
+                        // Clear the last search query from sessionStorage as we're navigating away to full search
+                        sessionStorage.removeItem('lastSearchQuery'); 
+                        window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+                    }
+                }
+            });
+
+            document.addEventListener("click", (event) => {
+                if (!searchContainer.contains(event.target)) {
+                    searchResultsContainer.style.display = "none";
+                    // When clicking outside, clear the input and session storage, unless it's a very fresh load with a query
+                    // This is debatable UX, but ensures a clean slate if user "gives up" on search
+                    if (searchInput.value.trim().length > 0 && !sessionStorage.getItem('lastSearchQuery')) { 
+                         searchInput.value = "";
+                    } else if (searchInput.value.trim().length === 0) {
+                         sessionStorage.removeItem('lastSearchQuery');
+                    }
+                }
+            });
+
+            hamburgerBtn.addEventListener("click", () => {
+                const expanded = hamburgerBtn.getAttribute("aria-expanded") === "true";
+                hamburgerBtn.setAttribute("aria-expanded", !expanded);
+                pageWrapper.classList.toggle("mobile-search-active");
+                if (!expanded) {
+                    searchInput.focus();
+                }
+            });
+
+            fetchHomepageContent();
+        }
+
+        initialize();
+    });
+</script>
+</body>
+</html>

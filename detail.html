@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnasFlix - Details</title>
+    <link rel="icon" type="image/x-icon" href="C:\Users\hp\Documents\a.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <style>
+      /* --- Base Styles --- */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #141414; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb { background: linear-gradient(45deg, #ff0000, #b30000); border-radius: 10px; }
+      
+      body, html {
+          margin: 0;
+          padding: 0;
+          font-family: 'Helvetica Neue', Arial, sans-serif;
+          background-color: #141414;
+          color: white;
+      }
+      .loader { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 4000; }
+
+      /* --- Navbar --- */
+      .navbar { background-color: #141414; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+      .brand { font-size: 24px; font-weight: bold; color: #e50914; }
+      .free { color: #ffffff; }
+      .right-buttons { display: flex; align-items: center; gap: 15px; }
+              .signup-btn {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 13px 30px;
+            border-radius: 26px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(63, 6, 6, 0.7);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+      .play-button {             
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 13px 30px;
+            border-radius: 26px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(63, 6, 6, 0.7);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+      /* --- Hero Styles --- */
+      #detail-hero {
+          position: relative;
+          display: flex;
+          align-items: flex-end;
+          min-height: 80vh;
+          padding: 120px 5% 40px;
+          background-size: cover;
+          background-position: center center;
+          transition: background-image 0.5s ease;
+      }
+      #detail-hero::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(to top, #141414 10%, rgba(20, 20, 20, 0.6) 50%, #141414 100%);
+          z-index: 1;
+      }
+      .hero-content {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          gap: 40px;
+          align-items: center;
+          max-width: 1400px;
+          margin: 0 auto;
+      }
+      .poster-container { flex-shrink: 0; }
+      #detail-poster { width: 300px; border-radius: 10px; box-shadow: 0 10px 30px rgba(34, 3, 3, 0.5); }
+      .info-container { max-width: 700px; }
+      #detail-title { font-size: 4rem; font-weight: bold; margin: 0 0 15px 0; text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.603); }
+      .meta-info { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; font-size: 1rem; color: #dadada; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.959); }
+      #detail-rating { color: #46d369; font-weight: bold; }
+      #detail-overview { font-size: 1.2rem; line-height: 1.6; margin-bottom: 30px; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8); }
+      .detail-buttons { display: flex; gap: 15px; }
+
+      /* --- General Content Styles --- */
+      .detail-container { padding: 0 5%; max-width: 1400px; margin: 0 auto; }
+      h2 { font-size: 1.8rem; border-left: 4px solid #ff0000; padding-left: 10px; margin: 40px 0 20px 0; }
+      .row { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+      .row::-webkit-scrollbar { display: none; }
+      .cast-card { background: #1f1f1f; border-radius: 8px; overflow: hidden; margin-right: 15px; width: 140px; flex-shrink: 0; text-align: center; }
+      .cast-card img { width: 100%; height: 175px; object-fit: cover; object-position: top; }
+      .cast-info { padding: 10px; }
+      .cast-name { font-weight: bold; font-size: 0.9rem; }
+      .cast-character { color: #aaa; font-size: 0.8rem; }
+      #trailer-section { margin-bottom: 50px; }
+      #trailer-container { position: relative; padding-bottom: 56.25%; height: 0; background: #000; border-radius: 10px; }
+      #trailer-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+      @media (max-width: 768px) {
+          .hero-content { flex-direction: column; text-align: center; }
+          #detail-title { font-size: 2.5rem; }
+      }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand" style="cursor: pointer;" onclick="window.location.href='index.html'">Anas<span class="free">Flix</span></div>
+        <div class="right-buttons">
+            <button class="signup-btn" onclick="window.location.href='index.html'">Home</button>
+            <button class="signup-btn" onclick="window.location.href='mylist.html'">My List</button>
+        </div>
+    </nav>
+
+    <div id="detail-hero">
+        <div class="hero-content">
+            <div class="poster-container"><img id="detail-poster" src="" alt="Movie Poster"></div>
+            <div class="info-container">
+                <h1 id="detail-title"></h1>
+                <div class="meta-info">
+                    <span id="detail-rating"></span>
+                    <span id="detail-release-date"></span>
+                    <span id="detail-genres"></span>
+                </div>
+                <p id="detail-overview"></p>
+                <div class="detail-buttons">
+                    <button id="watch-btn" class="play-button">▶ Watch Now</button>
+                    <button id="addToListBtn" class="signup-btn">+ Add to My List</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-container">
+        <div id="cast-section">
+            <h2>Top Billed Cast</h2>
+            <div id="cast-container" class="row"></div>
+        </div>
+        <div id="trailer-section">
+            <h2>Official Trailer</h2>
+            <div id="trailer-container"></div>
+        </div>
+    </div>
+
+    <div class="loader">
+        <svg width="50" height="50" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="20" fill="none" stroke="#e50914" stroke-width="5" stroke-dasharray="1,200" stroke-dashoffset="0" stroke-linecap="round">
+            <animate attributeName="stroke-dasharray" dur="1.5s" repeatCount="indefinite" values="1,200;90,150;1,200" />
+            <animate attributeName="stroke-dashoffset" dur="1.5s" repeatCount="indefinite" values="0;-35;-124" />
+          </circle>
+        </svg>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // --- 1. Constants and Variables ---
+        const API_KEY = '15d2ea6d0dc1d476efbca3eba2b9bbfb';
+        const API_BASE_URL = 'https://api.themoviedb.org/3';
+        const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/';
+
+        const detailHero = document.getElementById('detail-hero');
+        const detailPoster = document.getElementById('detail-poster');
+        const detailTitle = document.getElementById('detail-title');
+        const detailRating = document.getElementById('detail-rating');
+        const detailReleaseDate = document.getElementById('detail-release-date');
+        const detailGenres = document.getElementById('detail-genres');
+        const detailOverview = document.getElementById('detail-overview');
+        const watchBtn = document.getElementById('watch-btn');
+        const addToListBtn = document.getElementById('addToListBtn');
+        const castContainer = document.getElementById('cast-container');
+        const trailerContainer = document.getElementById('trailer-container');
+        const trailerSection = document.getElementById('trailer-section');
+        const castSection = document.getElementById('cast-section');
+        const loader = document.querySelector('.loader');
+
+        let currentItem = {};
+
+        // --- 2. Core Logic ---
+        async function fetchAndDisplayDetails(id, type) {
+            const [item, credits, videos] = await Promise.all([
+                fetchFromAPI(`${type}/${id}`),
+                fetchFromAPI(`${type}/${id}/credits`),
+                fetchFromAPI(`${type}/${id}/videos?language=en-US`)
+            ]);
+
+            if (!item) {
+                document.body.innerHTML = '<h1>Error: Could not load details.</h1>';
+                return;
+            }
+            
+            currentItem = { ...item, media_type: type };
+
+            // Set Background
+            if (item.backdrop_path) {
+                detailHero.style.backgroundImage = `url(${IMAGE_BASE_URL}original${item.backdrop_path})`;
+            } else {
+                detailHero.style.backgroundColor = '#101010';
+            }
+
+            // Populate DOM
+            detailPoster.src = item.poster_path ? `${IMAGE_BASE_URL}w500${item.poster_path}` : '';
+            detailTitle.textContent = item.title || item.name;
+            detailOverview.textContent = item.overview;
+            detailRating.innerHTML = `⭐ ${item.vote_average.toFixed(1)}`;
+            detailReleaseDate.textContent = `(${new Date(item.release_date || item.first_air_date).getFullYear() || 'N/A'})`;
+            detailGenres.textContent = item.genres.map(g => g.name).join(', ');
+
+            // Display components and set up buttons
+            displayCast(credits.cast);
+            displayTrailer(videos.results);
+            setupButtons(id, type);
+        }
+        
+        // --- 3. Helper Functions ---
+        function setupButtons(id, type) {
+            updateAddToListButton(currentItem);
+            
+            addToListBtn.onclick = () => {
+                toggleMyList(currentItem);
+                updateAddToListButton(currentItem);
+            };
+
+            watchBtn.onclick = () => {
+                const watchUrl = type === 'tv'
+                    ? `watch.html?movieId=${id}&type=tv&season=1&episode=1`
+                    : `watch.html?movieId=${id}&type=movie`;
+                window.location.href = watchUrl;
+            };
+        }
+
+        async function fetchFromAPI(endpoint, params = {}) {
+            loader.style.display = 'block';
+            try {
+                const response = await axios.get(`${API_BASE_URL}/${endpoint}`, { params: { api_key: API_KEY, ...params } });
+                return response.data;
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                return null;
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function displayCast(cast) {
+            castContainer.innerHTML = '';
+            const topCast = cast.slice(0, 10);
+            if (topCast.length === 0) {
+              castSection.style.display = 'none';
+              return;
+            }
+            topCast.forEach(member => {
+                if (member.profile_path) {
+                    const card = document.createElement('div');
+                    card.className = 'cast-card';
+                    card.innerHTML = `<img src="${IMAGE_BASE_URL}w185${member.profile_path}" alt="${member.name}"><div class="cast-info"><p class="cast-name">${member.name}</p><p class="cast-character">${member.character}</p></div>`;
+                    castContainer.appendChild(card);
+                }
+            });
+        }
+
+        function displayTrailer(videos) {
+            const trailer = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer');
+            if (trailer) {
+                trailerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${trailer.key}" title="Official Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+                trailerSection.style.display = 'block';
+            } else {
+                trailerSection.style.display = 'none';
+            }
+        }
+        
+        function toggleMyList(item) {
+            let myList = JSON.parse(localStorage.getItem('myList')) || [];
+            const index = myList.findIndex(i => i.id === item.id);
+            if (index !== -1) { 
+                myList.splice(index, 1); 
+            } else { 
+                myList.push({ 
+                    id: item.id, 
+                    title: item.title || item.name, 
+                    poster_path: item.poster_path, 
+                    media_type: item.media_type 
+                }); 
+            }
+            localStorage.setItem('myList', JSON.stringify(myList));
+        }
+
+        function updateAddToListButton(item) {
+            let myList = JSON.parse(localStorage.getItem('myList')) || [];
+            if(addToListBtn){
+               addToListBtn.textContent = myList.some(i => i.id === item.id) ? "✓ In My List" : "+ Add to My List";
+            }
+        }
+
+        // --- 4. Initialization ---
+        function initialize() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mediaId = urlParams.get('id');
+            const mediaType = urlParams.get('type');
+
+            if (mediaId && mediaType) {
+                fetchAndDisplayDetails(mediaId, mediaType);
+            } else {
+                document.body.innerHTML = '<h1>Error: No movie or TV show specified.</h1>';
+            }
+        }
+
+        initialize();
+    });
+    </script>
+</body>
+</html>
